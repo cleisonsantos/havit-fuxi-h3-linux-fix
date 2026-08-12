@@ -161,6 +161,8 @@ amixer -c "$(grep -i fuxi /proc/asound/cards | awk '{print $1}')" sget 'PCM',0
   keys bypass the OS. Keep using PipeWire/desktop volume controls.
 - **`systemctl --user restart wireplumber` fails**: ensure the WirePlumber
   service name matches your distro (`wireplumber.service` is standard).
+- **Headset frozen / unresponsive** (known issue, per Microsoft Q&A): hold the
+  power button for ~3 minutes — it hard-resets and returns to normal.
 
 ## Files
 
