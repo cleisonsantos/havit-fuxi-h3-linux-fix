@@ -48,7 +48,39 @@ verifier. Use `--dry-run` to preview without changing anything.
 ```bash
 ./install.sh --dry-run      # preview
 ./install.sh --with-service # + systemd user service (re-apply after login, race-safe)
+./install.sh --with-keepalive  # + prevent auto power-off (see below)
 ```
+
+## Bonus: stop the headset from auto powering-off
+
+The auto power-off lives in the **headset firmware** (2.4 GHz RF side) — the OS
+can't disable it directly. Two angles:
+
+1. **Keep-alive (software, works now)** — the dongle idles the headset when no
+audio frames flow. `fuxi-h3-keepalive.sh` streams continuous silence (raw
+`/dev/zero` via `pw-cat`) to the dongle, so the RF link never goes idle:
+
+   ```bash
+   ./install.sh --with-keepalive
+   systemctl --user stop fuxi-h3-keepalive   # toggle off (saves battery)
+   systemctl --user start fuxi-h3-keepalive  # toggle on
+   ```
+
+   Trade-off: the RF link stays active → somewhat higher battery drain.
+
+2. **HID reverse-engineering (experimental)** — the dongle exposes a vendor HID
+interface (`/dev/hidraw`, interface 3, Weltrend chip) with an **output**
+endpoint (`ep_01`). The udev rule already grants access; capture reports while
+pressing headset buttons to map the protocol:
+
+   ```bash
+   sudo udevadm control --reload-rules && sudo udevadm trigger --subsystem-match=hidraw
+   ./tools/hid-sniff.sh 60   # press volume/mute/power buttons while it runs
+   ```
+
+   If a report carries an auto-off setting, a feature-report write could disable
+   it properly — needs protocol discovery first (battery/status reports usually
+   appear on the IN endpoint `ep_81`).
 
 ## Verify
 
@@ -125,8 +157,11 @@ amixer -c "$(grep -i fuxi /proc/asound/cards | awk '{print $1}')" sget 'PCM',0
 ├── check.sh                      # verification
 ├── wireplumber/fuxi-h3-fix.conf  # soft-mixer rule (WP 0.4/0.5)
 ├── usr/local/bin/fuxi-h3-volume-fix.sh
-├── etc/udev/rules.d/99-fuxi-h3.rules
-└── systemd/fuxi-h3-fix.service   # optional user service
+├── usr/local/bin/fuxi-h3-keepalive.sh   # auto power-off prevention
+├── etc/udev/rules.d/99-fuxi-h3.rules    # hotplug fix + hidraw access
+├── systemd/fuxi-h3-fix.service   # optional user service
+├── systemd/fuxi-h3-keepalive.service   # optional keep-alive service
+└── tools/hid-sniff.sh            # HID report capture for reverse-engineering
 ```
 
 ---

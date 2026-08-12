@@ -31,5 +31,13 @@ if [ -f "$HOME/.config/systemd/user/fuxi-h3-fix.service" ]; then
   say "removed systemd user service"
 fi
 
+if [ -f "$HOME/.config/systemd/user/fuxi-h3-keepalive.service" ]; then
+  systemctl --user disable --now fuxi-h3-keepalive.service 2>/dev/null || true
+  rm -f "$HOME/.config/systemd/user/fuxi-h3-keepalive.service"
+  systemctl --user daemon-reload 2>/dev/null || true
+  say "removed keep-alive service"
+fi
+root rm -f /usr/local/bin/fuxi-h3-keepalive.sh
+
 say "Done. Restart the audio stack to revert to hardware volume:"
 say "  systemctl --user restart wireplumber pipewire pipewire-pulse"

@@ -1,1 +1,6 @@
 ACTION=="add", SUBSYSTEM=="sound", ATTRS{idVendor}=="040b", ATTRS{idProduct}=="0897", RUN+="/usr/local/bin/fuxi-h3-volume-fix.sh"
+
+# HID interface (hidraw): allow access for vendor-command exploration
+# (battery reports, auto power-off settings...). 0666 matches how most
+# vendor dongle rules ship; adjust if you prefer a user group.
+ACTION=="add", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="040b", ATTRS{idProduct}=="0897", MODE="0666"

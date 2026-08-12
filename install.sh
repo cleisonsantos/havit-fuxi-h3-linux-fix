@@ -15,6 +15,7 @@ set -euo pipefail
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DRY_RUN=0
 WITH_SERVICE=0
+WITH_KEEPALIVE=0
 
 # ── helpers ────────────────────────────────────────────────────────────────
 say()  { printf '\033[1;34m[fix ]\033[0m %s\n' "$*"; }
@@ -43,6 +44,7 @@ for arg in "$@"; do
   case "$arg" in
     --dry-run)      DRY_RUN=1 ;;
     --with-service) WITH_SERVICE=1 ;;
+    --with-keepalive) WITH_KEEPALIVE=1 ;;
     -h|--help)
       cat <<'EOF'
 Usage: ./install.sh [--dry-run] [--with-service]
@@ -50,6 +52,8 @@ Usage: ./install.sh [--dry-run] [--with-service]
   --dry-run        preview what would be changed, without touching the system
   --with-service   also install a systemd user service that re-applies the
                    fix after login (race-safe: retries until the card is ready)
+  --with-keepalive also install the keep-alive service: streams silence to
+                   the dongle so the headset never auto power-offs
 EOF
       exit 0 ;;
     *) die "unknown option: $arg" ;;
@@ -107,6 +111,17 @@ if [ "$WITH_SERVICE" -eq 1 ]; then
   run systemctl --user daemon-reload
   run systemctl --user enable --now fuxi-h3-fix.service
   ok "systemd user service enabled (re-applies fix after login)"
+fi
+
+# ── 3b. optional keep-alive service (prevent auto power-off) ───────────────
+if [ "$WITH_KEEPALIVE" -eq 1 ]; then
+  root install -m 755 "$REPO_DIR/usr/local/bin/fuxi-h3-keepalive.sh" /usr/local/bin/fuxi-h3-keepalive.sh
+  SD_DIR="$HOME/.config/systemd/user"
+  run mkdir -p "$SD_DIR"
+  run install -m 644 "$REPO_DIR/systemd/fuxi-h3-keepalive.service" "$SD_DIR/fuxi-h3-keepalive.service"
+  run systemctl --user daemon-reload
+  run systemctl --user enable --now fuxi-h3-keepalive.service
+  ok "keep-alive service enabled (headset stays awake — uses a bit more battery)"
 fi
 
 # ── 4. restart audio stack + apply + verify ────────────────────────────────

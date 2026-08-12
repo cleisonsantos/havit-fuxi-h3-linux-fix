@@ -1,0 +1,13 @@
+[Unit]
+Description=Havit Fuxi-H3 keep-alive (prevent auto power-off)
+After=pipewire.service pipewire-pulse.service
+Wants=pipewire.service pipewire-pulse.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/fuxi-h3-keepalive.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
