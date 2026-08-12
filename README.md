@@ -82,6 +82,19 @@ pressing headset buttons to map the protocol:
    it properly — needs protocol discovery first (battery/status reports usually
    appear on the IN endpoint `ep_81`).
 
+## Universal workaround (any device: phone, Windows, macOS…)
+
+No setup needed — just **play a silent track on loop**. Any device that can play
+audio keeps the headset awake, because the dongle sees continuous audio frames:
+
+- `tools/silence-2min.wav` — 2 min of silence (960 KB, plays everywhere).
+  Copy it to your phone and loop it in any music player; on Windows/macOS loop it
+  in VLC or any player.
+- This is the same mechanism as the Linux keep-alive service, just manual —
+  great for devices where you can't install the fix.
+- Android: disable battery optimization for the player app so it keeps running
+  with the screen off.
+
 ## Verify
 
 ```bash
