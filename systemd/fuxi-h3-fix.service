@@ -1,0 +1,15 @@
+[Unit]
+Description=Havit Fuxi-H3 hardware volume fix (force 100%)
+After=sound.target pipewire.service wireplumber.service
+Wants=pipewire.service wireplumber.service
+
+[Service]
+Type=oneshot
+Environment=FUXI_H3_RETRY=1
+ExecStart=/usr/local/bin/fuxi-h3-volume-fix.sh
+# card may not be ready right after login -> retry until it is
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target

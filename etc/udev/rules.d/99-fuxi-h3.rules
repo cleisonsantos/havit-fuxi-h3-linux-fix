@@ -1,0 +1,1 @@
+ACTION=="add", SUBSYSTEM=="sound", ATTRS{idVendor}=="040b", ATTRS{idProduct}=="0897", RUN+="/usr/local/bin/fuxi-h3-volume-fix.sh"
